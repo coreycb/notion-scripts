@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+
+from notion_client import Client
+
+
+def create_task(notion, token, database_id, task_name, status, due_date):
+    properties = {
+        "Name": {"title": [{"text": {"content": task_name}}]},
+        "Status": {"select": {"name": status}},
+        "Due Date": {"date": {"start": due_date}},
+    }
+    try:
+        response = notion.pages.create(
+            parent={"database_id": database_id},
+            properties=properties,
+        )
+        print("Task created successfully:", response["url"])
+    except Exception as e:
+        print("An error occurred:", e)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "task_name",
+        type=str,
+        help="The name of the task",
+    )
+    parser.add_argument(
+        "due_date",
+        type=str,
+        help="The date the task is due (YYYY-MM-DD)",
+    )
+    args = parser.parse_args()
+
+    token = os.getenv("NOTION_INTEGRATION_TOKEN")
+    notion = Client(auth=token)
+    database_id = os.getenv("NOTION_DATABASE_ID")
+    task_name = args.task_name
+    status = "Backlog"
+    due_date = args.due_date
+
+    create_task(notion, token, database_id, task_name, status, due_date)
+
+
+if __name__ == "__main__":
+    main()
